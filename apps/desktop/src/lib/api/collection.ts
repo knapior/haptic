@@ -1,6 +1,6 @@
 import { activeFile, collection, noteHistory } from '@/store';
 import { hideDotFiles, validateHapticFolder, sortFileEntry } from '@/utils';
-import { readDir } from '@tauri-apps/api/fs';
+import { type FileEntry, readDir } from '@tauri-apps/api/fs';
 import { get } from 'svelte/store';
 import { open } from '@tauri-apps/api/dialog';
 import { writeTextFile, readTextFile, BaseDirectory } from '@tauri-apps/api/fs';
@@ -19,7 +19,7 @@ export const fetchCollectionEntries = async (
 	let files = await readDir(dirPath, { recursive: true });
 
 	if (sort === 'name') {
-		files.sort((a, b) => sortFileEntry(a, b));
+		recursiveSort(files);
 	}
 
 	// Hide dotfiles
@@ -28,6 +28,12 @@ export const fetchCollectionEntries = async (
 	}
 
 	return files;
+};
+
+const recursiveSort = (files: FileEntry[] | undefined) => {
+	if (files == null) return;
+	files.forEach((it) => recursiveSort(it.children));
+	files.sort((a, b) => sortFileEntry(a, b));
 };
 
 export const loadCollection = async (path?: string | undefined) => {
